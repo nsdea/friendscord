@@ -188,17 +188,39 @@ async def friend(ctx, user: discord.Member):
         await ctx.send(embed=discord.Embed(title='You\'re already friends', description=f'{user.mention} & {ctx.author.mention} are already friends.', color=COLOR))       
 
     elif requested:
-        await ctx.send(embed=discord.Embed(title='Accepted friend request', description=f'{user.mention} is now your friend!`.', color=COLOR))       
+        if not get_data('friends.json').get(ctx.author.id):
+            set_data('friends.json', value=[], key=ctx.author.id)
+
+        value = get_data('friends.json', key=ctx.author.id)
+        value.append(user.id)
+        set_data('friends.json', value=value, key=ctx.author.id)
+
+        await ctx.send(embed=discord.Embed(title='Accepted friend request', description=f'{user.mention} is now your friend!', color=COLOR))       
     
     else:
-        print('friendzone')
         if not get_data('friends.json').get(ctx.author.id):
-            print('no data')
             set_data('friends.json', value=[], key=ctx.author.id)
-        print('kek')
-        set_data('friends.json', value=get_data('friends.json', key=ctx.author.id).append(user.id), key=ctx.author.id)
+
+        value = get_data('friends.json', key=ctx.author.id)
+        value.append(user.id)
+        set_data('friends.json', value=value, key=ctx.author.id)
+
         await ctx.send(embed=discord.Embed(title='Sent friend request', description=f'{user.mention} has to accept your friend request using `&friend @{ctx.author.name}` .', color=COLOR))
 
+
+@client.command(help='💡List a user\'s friends.')
+async def friends(ctx, user: discord.Member=None):
+    if not user:
+        user = ctx.author
+    
+    text = ''
+    for friend in get_data('friends.json', key=user.id):
+        try:
+            text += f'{client.get_user(friend).name}'
+        except:
+            pass
+
+    await ctx.send(embed=discord.Embed(title=f'{user.name}\'s friends', description=text, color=COLOR))
 
 @client.command(help='🔒Invite this bot to your server!')
 async def invite(ctx):
