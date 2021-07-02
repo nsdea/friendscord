@@ -102,7 +102,7 @@ async def commandinfo(ctx, name=None):
     embed.set_footer(text='Run &help <command> for detailed info on a command')
     await ctx.send(embed=embed)
 
-@client.command(aliases=['playing'], help='💡Search for Game activities, or leave the argument blank get an overview.', usage='(<activity>)')
+@client.command(aliases=['playing'], help='🔧Search for Game activities, or leave the argument blank get an overview.', usage='(<activity>)')
 async def games(ctx, *activity):
     if activity:
         activity = ' '.join(activity)
@@ -135,7 +135,7 @@ async def games(ctx, *activity):
 
         await ctx.send(embed=embed)
 
-@client.command(aliases=['talking'], help='💡Get an overview of voice channels.')
+@client.command(aliases=['talking'], help='🔧Get an overview of voice channels.')
 async def voice(ctx):
     voice_overview = {}
     
@@ -149,7 +149,7 @@ async def voice(ctx):
                 except KeyError:
                     voice_overview[name] = [f'{user.mention}']
 
-    embed = discord.Embed(title='Voice channels', color=COLOR)
+    embed = discord.Embed(title='Voice channels', description='*[nobody feels like talking]*' if not voice_overview.keys() else '', color=COLOR)
 
     for channel in voice_overview.keys():
         embed.add_field(name=channel, value=' '.join(voice_overview[channel]), inline=False)
@@ -185,7 +185,7 @@ async def friend(ctx, user: discord.Member):
         requested = False
 
     if already_friends:
-        await ctx.send(embed=discord.Embed(title='You\'re already friends', description=f'{user.mention} & {ctx.author.mention} are already friends.', color=COLOR))       
+        await ctx.send(embed=discord.Embed(title='You\'re already friends', description=f'{user.mention} & {ctx.author.mention} are already friends.', color=COLOR).add_footer(text=f'If you don\'t like each other, do **.unfriend @{user.name}**'))       
 
     elif requested:
         if not get_data('friends.json').get(ctx.author.id):
@@ -208,21 +208,36 @@ async def friend(ctx, user: discord.Member):
         await ctx.send(embed=discord.Embed(title='Sent friend request', description=f'{user.mention} has to accept your friend request using `&friend @{ctx.author.name}` .', color=COLOR))
 
 
-@client.command(help='💡List a user\'s friends.')
+@client.command(aliases=['friendlist'], help='💡List a user\'s friends.')
 async def friends(ctx, user: discord.Member=None):
     if not user:
         user = ctx.author
     
     text = ''
-    for friend in get_data('friends.json', key=user.id):
-        try:
-            text += f'{client.get_user(friend).name}'
-        except:
-            pass
+    if get_data('friends.json', key=user.id):
+        for friend in get_data('friends.json', key=user.id):
+            try:
+                text += f'> {client.get_user(friend).name}\n'
+            except:
+                pass
+    else:
+        text = 'Lonely like a Wumpus :('
 
     await ctx.send(embed=discord.Embed(title=f'{user.name}\'s friends', description=text, color=COLOR))
 
-@client.command(help='🔒Invite this bot to your server!')
+@client.command(aliases=['removefriend'], help='💡Remove someone as a friend.')
+async def unfriend(ctx, user: discord.Member):
+    try:
+        already_friends = ctx.author.id in get_data('friends.json', key=user.id) and user.id in get_data('friends.json', value=ctx.author.id)
+    except TypeError:
+        already_friends = False
+   
+    if already_friends:
+        await ctx.send(embed=discord.Embed(title='Please add me to your server :)', description='It just takes about 10 seconds and would help me out a lot! Thank you.\n\n<https://discord.com/api/oauth2/authorize?client_id=859528281257672704&permissions=3072&scope=bot>', color=COLOR))
+    else:
+        await ctx.send(embed=discord.Embed(title='You\'re not even friends', description='How am I supposed to remove you then?', color=COLOR))
+
+@client.command(aliases=['support'], help='🔒Invite this bot to your server!')
 async def invite(ctx):
     await ctx.send(embed=discord.Embed(title='Please add me to your server :)', description='It just takes about 10 seconds and would help me out a lot! Thank you.\n\n<https://discord.com/api/oauth2/authorize?client_id=859528281257672704&permissions=3072&scope=bot>', color=COLOR))
 
