@@ -52,6 +52,13 @@ def change_data(path, value, key=None):
     # else:
         # set_data(path=path, value=value, key=key)
 
+def parse_boolean(text: str):
+    '''Translates human language yes/no/do/dont into a boolean to improve usability'''
+
+    if text.lower() in ['no', 'don\'t', 'dont', 'off', 'stop', '0', 'false', 'inactive', 'offline']:
+        return False
+    return text 
+
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
@@ -248,6 +255,5 @@ async def info(ctx):
 @client.event
 async def on_message(message):
     await client.process_commands(message)
-
 
 client.run(os.getenv('TOKEN'))
