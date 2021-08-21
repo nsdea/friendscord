@@ -1,2 +1,4 @@
 discord
 python-dotenv
+discord-ext-slash
+discord_components

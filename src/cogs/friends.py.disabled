@@ -1,0 +1,95 @@
+from .helpers import data
+from .helpers import values
+
+import discord
+import asyncio
+
+from discord.ext import commands
+
+class Friends(commands.Cog):
+    def __init__(self, client):
+        self.client = client
+
+    @commands.command(aliases=['addfriend'], help='💡Send someone a friend request.', usage='(<userping/mention>)')
+    async def friend(self, ctx, user: discord.Member):
+        if ctx.author == user:
+            msg = await ctx.send(embed=discord.Embed(title='You successfully (not) made friends with yourself', description=f'Do you also wish to merry yourself and make kids?', color=values.color()))
+            await msg.add_reaction('✅')
+            await msg.add_reaction('❌')
+
+            def check(reaction, user):
+                return user == ctx.author and str(reaction.emoji) == '✅'
+
+            try:
+                await self.client.wait_for('reaction_add', check=check, timeout=20)
+            except asyncio.TimeoutError:
+                pass
+            else:
+                await msg.edit(embed=discord.Embed(title='Great', description=f'What am I programming at this moment', color=values.color()).set_footer(text='pls help!!11'))
+            return
+
+        try:
+            already_friends = ctx.author.id in data.get_data('friends.json', key=user.id) and user.id in data.get_data('friends.json', value=ctx.author.id)
+        except TypeError:
+            already_friends = False
+
+        try:
+            requested = ctx.author.id in data.get_data('friends.json', key=user.id)
+        except TypeError:
+            requested = False
+
+        if already_friends:
+            await ctx.send(embed=discord.Embed(title='You\'re already friends', description=f'{user.mention} & {ctx.author.mention} are already friends.', color=values.color()).add_footer(text=f'If you don\'t like each other, do **.unfriend {user.name}**'))       
+
+        elif requested:
+            if not data.get_data('friends.json').get(ctx.author.id):
+                data.set_data('friends.json', value=[], key=ctx.author.id)
+
+            value = data.get_data('friends.json', key=ctx.author.id)
+            value.append(user.id)
+            data.set_data('friends.json', value=value, key=ctx.author.id)
+
+            await ctx.send(embed=discord.Embed(title='Accepted friend request', description=f'{user.mention} is now your friend!', color=values.color()))       
+        
+        else:
+            if not data.get_data('friends.json').get(ctx.author.id):
+                data.set_data('friends.json', value=[], key=ctx.author.id)
+
+            value = data.get_data('friends.json', key=ctx.author.id)
+            value.append(user.id)
+            data.set_data('friends.json', value=value, key=ctx.author.id)
+
+            await ctx.send(embed=discord.Embed(title='Sent friend request', description=f'{user.mention} has to accept your friend request using `&friend {ctx.author.name}` .', color=values.color()))
+
+
+    @commands.command(aliases=['friendlist'], help='💡List a user\'s friends.')
+    async def friends(self, ctx, user: discord.Member=None):
+        if not user:
+            user = ctx.author
+        
+        text = ''
+        if data.get_data('friends.json', key=user.id):
+            for friend in data.get_data('friends.json', key=user.id):
+                try:
+                    text += f'> {self.client.get_user(friend).name}\n'
+                except:
+                    pass
+        else:
+            text = 'Lonely like a Wumpus :('
+
+        await ctx.send(embed=discord.Embed(title=f'{user.name}\'s friends', description=text, color=values.color()))
+
+    @commands.command(aliases=['removefriend'], help='💡Remove someone as a friend.')
+    async def unfriend(self, ctx, user: discord.Member):
+        try:
+            already_friends = ctx.author.id in data.get_data('friends.json', key=user.id) and user.id in data.get_data('friends.json', value=ctx.author.id)
+        except TypeError:
+            already_friends = False
+    
+        if already_friends:
+            await ctx.send(embed=discord.Embed(title='Please add me to your server :)', description='It just takes about 10 seconds and would help me out a lot! Thank you.\n\n<https://discord.com/api/oauth2/authorize?client_id=859528281257672704&permissions=3072&scope=bot>', color=values.color()))
+        else:
+            await ctx.send(embed=discord.Embed(title='You\'re not even friends', description='How am I supposed to remove you then?', color=values.color()))
+
+def setup(client):
+    client.add_cog(Friends(client))

@@ -1,0 +1,1 @@
+DISCORD_TOKEN=put_the_bot_token_in_here
