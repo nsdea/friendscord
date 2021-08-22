@@ -1,4 +1,5 @@
 discord
 python-dotenv
+repldiscordpy
 discord-ext-slash
 discord_components

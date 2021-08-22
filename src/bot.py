@@ -3,8 +3,10 @@ from cogs.helpers import values
 
 import os
 import json
+import random
 import discord
 import asyncio
+import repldiscordpy # my own package :)
 
 from dotenv import load_dotenv
 from discord.ext import commands, tasks
@@ -23,7 +25,15 @@ client = ComponentsBot(
 @client.event
 async def on_ready():
     print(f'Logged in as {client.user}')
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'{values.prefix()}help'))
+   
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'Starting...  {values.prefix()}help'))
+    change_status.start()
+
+status = discord.cycle(['coded by ONLIX#1662', f'{values.prefix()}help :)'])
+
+@tasks.loop(seconds=10)
+async def change_status():
+  await client.change_presence(activity=discord.Game(next(status)))
 
 @client.event
 async def on_command_error(ctx, error):
@@ -138,9 +148,18 @@ async def info(ctx):
 async def on_message(message):
     await client.process_commands(message)
 
+repldiscordpy.keep_alive.keep_alive(port=6969)
+
 # load cogs
 # credit: https://youtu.be/vQw8cFfZPx0
-for filename in os.listdir(os.getcwd() + '/src/cogs/'):
+
+ld = ''
+try:
+    ld = os.listdir(os.getcwd() + '/src/cogs/')
+except FileNotFoundError:
+    ld = os.listdir(os.getcwd() + '/cogs/')
+
+for filename in ld:
     if filename.endswith('.py'):
         client.load_extension(f'cogs.{filename[:-3]}')
 
