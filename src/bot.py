@@ -6,6 +6,7 @@ import json
 import random
 import discord
 import asyncio
+import itertools
 # import repldiscordpy # my own package :)
 
 from dotenv import load_dotenv
@@ -26,14 +27,21 @@ client = ComponentsBot(
 async def on_ready():
     print(f'Logged in as {client.user}')
    
-    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=f'Starting...  {values.prefix()}help'))
-    # change_status.start()
+    await client.change_presence(activity=discord.Game(f'starting Bot... :)'))
+    change_status.start()
 
-# status = discord.cycle(['coded by ONLIX#1662', f'{values.prefix()}help :)'])
+# member_ids = []
+# for g in client.guilds:
+#     for m in g.members:
+#         if m not in member_ids:
+#             member_ids.append(m)
 
-# @tasks.loop(seconds=10)
-# async def change_status():
-#     await client.change_presence(activity=discord.Game(next(status)))
+def statuses():
+    return [f'{len(set(client.get_all_members()))} members・{len(client.guilds)} servers', f'{values.prefix()}help']
+
+@tasks.loop(seconds=5)
+async def change_status():
+    await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=random.choice(statuses())))
 
 @client.event
 async def on_command_error(ctx, error):
