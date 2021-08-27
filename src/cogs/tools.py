@@ -14,18 +14,27 @@ class Tools(commands.Cog):
         mode = mode.lower()
 
         if mode == 'server':
-            minimum = len([m for m in ctx.guild.members if (str(m.status) == 'online' and (not m.bot))])
+            minimum = len([m for m in ctx.guild.members if (str(m.status) != 'offline' and (not m.bot))])
             maximum = len([m for m in ctx.guild.members if (not m.bot)])
 
         elif mode == 'bots':
-            minimum = len([m for m in ctx.guild.members if (str(m.status) == 'online' and (m.bot))])
+            minimum = len([m for m in ctx.guild.members if (str(m.status) != 'offline' and (m.bot))])
             maximum = len([m for m in ctx.guild.members if (m.bot)])
 
         else:
-            pass
-            # minimum = len([m for m in set(self.client.get_all_members()) if (str(m.status) == 'online' and (m.bot))])
-            # maximum = len([m for m in set(self.client.get_all_members()) if (m.bot)])
-        
+            minimum = 0
+            maximum = 0
+            already_counted = []
+
+            for g in self.client.guilds:
+                for m in g.members:
+                    if not m.id in already_counted and (not m.bot):
+                        if str(m.status) != 'offline':
+                            minimum += 1
+                        maximum += 1
+                    
+                    already_counted.append(m.id)
+                        
         embed = discord.Embed(
             title=f'Online Percentage for {"Bots in " if mode == "bots" else ""}{"this Server" if mode != "servers" else "all Servers I have access to"}',
             description=f'> {minimum}/{maximum} (**{round(minimum/maximum*100)}%**)',
